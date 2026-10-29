@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-test-app
+  #deployment labels
+  labels:
+    app: flask-app
+spec:
+  replicas: 3
+  # Deployment controller uses to find and track which pods it owns.
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    # pod template labels - labels stamped onto every single Pod instance created by this deployment.
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+        - name: flask-app-container
+          image: marlyt/flask-postgres-app:v1
+          ports:
+            - containerPort: 5007
+          workingDir: /app
+          env:
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: app-configmap
+                  key: database_name
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: app-configmap
+                  key: database_host
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-password
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-username
+            - name: DB_PORT
+              value: "5432"
+      restartPolicy: Always
